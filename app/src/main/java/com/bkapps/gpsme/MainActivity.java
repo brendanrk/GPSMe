@@ -16,7 +16,8 @@ public class MainActivity extends AppCompatActivity {
     private Button getCoords;
     private Boolean isGettingGPS;
     // Acquire a reference to the system Location Manager
-    LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+    LocationManager locationManager;
+    LocationListener locationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,16 +31,20 @@ public class MainActivity extends AppCompatActivity {
         getCoords.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Perform action on click
-                if (isGettingGPS) {
+                if (!isGettingGPS) {
                     String locationProvider = LocationManager.NETWORK_PROVIDER;
                     // Or use LocationManager.GPS_PROVIDER
 
                     Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
                     textGPS.setText(lastKnownLocation.toString());
                     startLocationCalls();
+                    getCoords.setText("running...Press here to Stop");
                     isGettingGPS = true;
+
                 } else {
                     stopLocationCalls();
+                    getCoords.setText("Press here for GPS");
+                    isGettingGPS = false;
                 }
             }
         });
@@ -50,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         // The activity is about to become visible.
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
     }
     @Override
     protected void onResume() {
@@ -74,25 +80,30 @@ public class MainActivity extends AppCompatActivity {
         // The activity is about to be destroyed.
     }
 
-    LocationListener locationListener = new LocationListener() {
-        public void onLocationChanged(Location location) {
-            // Called when a new location is found by the network location provider.
-//                makeUseOfNewLocation(location);
-            textGPS.setText(location.toString());
-        }
 
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-        public void onProviderEnabled(String provider) {}
-
-        public void onProviderDisabled(String provider) {}
-    };
 
 
     protected void startLocationCalls() {
 
         // Define a listener that responds to location updates
+        locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+//                makeUseOfNewLocation(location);
+                //textGPS.setText(location.toString());
+                textGPS.setText("Lat  :"+String.format("%f", location.getLatitude())
+                                +"\n"+"Long :"+String.format("%f", location.getLongitude())
+                                +"\n"+"Speed:"+String.format("%f",location.getSpeed())
+                );
 
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            public void onProviderEnabled(String provider) {}
+
+            public void onProviderDisabled(String provider) {}
+        };
 
         // Register the listener with the Location Manager to receive location updates
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
@@ -116,21 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     protected void stopLocationCalls() {
-        // Register the listener with the Location Manager to receive location updates
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 
-///        String locationProvider = LocationManager.NETWORK_PROVIDER;
-// Or, use GPS location data:
-// String locationProvider = LocationManager.GPS_PROVIDER;
-//        locationManager.requestLocationUpdates(locationProvider, 0, 0, locationListener);
-
-//        String locationProvider = LocationManager.NETWORK_PROVIDER;
-// Or use LocationManager.GPS_PROVIDER
-
-//        Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
-
-
-// Remove the listener you previously added
         locationManager.removeUpdates(locationListener);
 
 
